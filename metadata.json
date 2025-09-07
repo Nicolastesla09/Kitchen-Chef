@@ -1,0 +1,7 @@
+{
+  "name": "Kitchen Chef",
+  "description": "An AI app to suggest and visualize recipes from a pantry photo.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
