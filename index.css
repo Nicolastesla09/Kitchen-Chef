@@ -238,7 +238,7 @@ header h1 {
     align-items: center;
 }
 
-.cuisine-selector, .time-selector {
+.cuisine-selector, .time-selector, .diet-selector, .avoid-food-selector {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -249,17 +249,17 @@ header h1 {
     flex-basis: 55%;
 }
 
-.time-selector {
+.time-selector, .diet-selector, .avoid-food-selector {
     flex-basis: 100%;
 }
 
-.cuisine-selector label, .servings-selector > label, .time-selector > label {
+.cuisine-selector label, .servings-selector > label, .time-selector > label, .diet-selector > label, .avoid-food-selector > label {
     font-weight: 500;
     font-size: 0.9rem;
     color: var(--text-light-color);
 }
 
-.cuisine-selector select, .time-selector select {
+.cuisine-selector select, .time-selector select, .diet-selector select, .avoid-food-selector input, .custom-diet-input {
     width: 100%;
     padding: 0.6rem;
     border-radius: 8px;
@@ -267,6 +267,9 @@ header h1 {
     font-size: 1rem;
     background-color: var(--card-background);
     color: var(--text-color);
+}
+
+.cuisine-selector select, .time-selector select, .diet-selector select {
     -webkit-appearance: none;
     appearance: none;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23606770' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");

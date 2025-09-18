@@ -37,6 +37,16 @@ const translations = {
         any: "Any",
         cook: "Plan recipes",
         cooking: "Cooking...",
+        diet: "Diet:",
+        regular: "Regular",
+        obesityDiet: "Diet for obesity",
+        underweightDiet: "For underweight people",
+        vegetarian: "Vegetarian",
+        gymmer: "For gymmers",
+        custom: "Custom",
+        enterCustomDiet: "Enter custom diet...",
+        foodsToAvoid: "Foods to avoid:",
+        foodsToAvoidPlaceholder: "e.g., peanuts, gluten",
         // Recipe Screen - Results
         recipeSuggestions: "Recipe Suggestions",
         instructions: "Instructions",
@@ -84,6 +94,16 @@ const translations = {
         any: "任何",
         cook: "规划食谱",
         cooking: "烹饪中...",
+        diet: "饮食:",
+        regular: "常规",
+        obesityDiet: "肥胖者饮食",
+        underweightDiet: "体重不足者饮食",
+        vegetarian: "素食",
+        gymmer: "健身者",
+        custom: "自定义",
+        enterCustomDiet: "输入自定义饮食...",
+        foodsToAvoid: "避免的食物:",
+        foodsToAvoidPlaceholder: "例如：花生、麸质",
         // Recipe Screen - Results
         recipeSuggestions: "食谱建议",
         instructions: "说明",
@@ -130,6 +150,16 @@ const translations = {
         any: "Bất kỳ",
         cook: "Lên thực đơn",
         cooking: "Đang nấu...",
+        diet: "Chế độ ăn:",
+        regular: "Thường",
+        obesityDiet: "Ăn kiêng cho người béo phì",
+        underweightDiet: "Cho người gầy",
+        vegetarian: "Ăn chay",
+        gymmer: "Cho người tập gym",
+        custom: "Khác",
+        enterCustomDiet: "Nhập chế độ ăn...",
+        foodsToAvoid: "Thực phẩm muốn tránh:",
+        foodsToAvoidPlaceholder: "ví dụ: đậu phộng, gluten",
         // Recipe Screen - Results
         recipeSuggestions: "Gợi ý công thức",
         instructions: "Hướng dẫn",
@@ -273,7 +303,7 @@ const AddPhotoModal = ({ onClose, onFileSelect, t }) => {
 };
 
 
-const RecipeScreen = ({ t, uploadedImage, backgroundImageUrl }) => {
+const RecipeScreen = ({ t, language, uploadedImage, backgroundImageUrl }) => {
     type AppState = 'initial' | 'photo_uploaded' | 'loading_recipes' | 'recipes_loaded';
     const [appState, setAppState] = useState<AppState>('initial');
 
@@ -284,6 +314,10 @@ const RecipeScreen = ({ t, uploadedImage, backgroundImageUrl }) => {
     const [cuisine, setCuisine] = useState<string>('Any');
     const [servings, setServings] = useState<number>(2);
     const [maxCookingTime, setMaxCookingTime] = useState<string>('Any');
+    const [diet, setDiet] = useState<string>('Regular');
+    const [customDiet, setCustomDiet] = useState<string>('');
+    const [foodsToAvoid, setFoodsToAvoid] = useState<string>('');
+
 
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
@@ -311,9 +345,23 @@ const RecipeScreen = ({ t, uploadedImage, backgroundImageUrl }) => {
         setRecipeData(null);
 
         try {
+            const languageMap = {
+                en: 'English',
+                zh: 'Chinese',
+                vi: 'Vietnamese'
+            };
+            const targetLanguage = languageMap[language];
             const imagePart = await fileToGenerativePart(uploadedImage);
+            
             const timeConstraint = maxCookingTime !== 'Any' ? `The total cooking time must be less than ${maxCookingTime} minutes.` : '';
-            const recipePrompt = `You are a creative chef. Based on the pantry ITEMS in the image, generate exactly 3 unique ${recipeType} recipes for ${servings} people. ${timeConstraint} Strictly adhere to the "${cuisine}" cuisine. If "${cuisine}" is "Any", suggest recipes from any suitable cuisine. For each recipe, provide a title, a short description, a list of any extra ingredients needed with quantities, detailed step-by-step instructions with precise measurements (e.g., 100g, 2 tbsp), the estimated total cooking_time (e.g., "30 min"), the total calories for the dish (e.g., "450 kcal"), and a brief for generating a photorealistic image. Return ONLY JSON.`;
+            
+            const effectiveDiet = diet === 'Custom' ? customDiet.trim() : diet;
+            const dietConstraint = effectiveDiet && effectiveDiet !== 'Regular' ? `The recipes must be suitable for the following diet: "${effectiveDiet}".` : '';
+
+            const avoidanceConstraint = foodsToAvoid.trim() ? `The recipes MUST NOT contain any of the following: ${foodsToAvoid.trim()}.` : '';
+
+            const recipePrompt = `You are a creative chef. Based on the pantry ITEMS in the image, generate exactly 3 unique ${recipeType} recipes for ${servings} people. ${timeConstraint} Strictly adhere to the "${cuisine}" cuisine. If "${cuisine}" is "Any", suggest recipes from any suitable cuisine. ${dietConstraint} ${avoidanceConstraint} For each recipe, provide a title, a short description, a list of any extra ingredients needed with quantities, detailed step-by-step instructions with precise measurements (e.g., 100g, 2 tbsp), the estimated total cooking_time (e.g., "30 min"), the total calories for the dish (e.g., "450 kcal"), and a brief for generating a photorealistic image. All output text MUST be in ${targetLanguage}. Return ONLY JSON.`;
+            
             const recipeResponse = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: { parts: [imagePart, { text: recipePrompt }] },
@@ -449,6 +497,44 @@ const RecipeScreen = ({ t, uploadedImage, backgroundImageUrl }) => {
                                         </select>
                                     </div>
                                 </div>
+                                 <div className="option-row">
+                                    <div className="diet-selector">
+                                        <label htmlFor="diet-select">{t.diet}</label>
+                                        <select id="diet-select" value={diet} onChange={(e) => setDiet(e.target.value)} disabled={appState === 'loading_recipes'}>
+                                            <option value="Regular">{t.regular}</option>
+                                            <option value="Diet for obesity">{t.obesityDiet}</option>
+                                            <option value="For underweight people">{t.underweightDiet}</option>
+                                            <option value="Vegetarian">{t.vegetarian}</option>
+                                            <option value="For gymmers">{t.gymmer}</option>
+                                            <option value="Custom">{t.custom}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                {diet === 'Custom' && (
+                                <div className="option-row">
+                                    <input
+                                        type="text"
+                                        className="custom-diet-input"
+                                        value={customDiet}
+                                        onChange={(e) => setCustomDiet(e.target.value)}
+                                        placeholder={t.enterCustomDiet}
+                                        disabled={appState === 'loading_recipes'}
+                                    />
+                                </div>
+                                )}
+                                <div className="option-row">
+                                    <div className="avoid-food-selector">
+                                        <label htmlFor="avoid-food-input">{t.foodsToAvoid}</label>
+                                        <input
+                                            id="avoid-food-input"
+                                            type="text"
+                                            value={foodsToAvoid}
+                                            onChange={(e) => setFoodsToAvoid(e.target.value)}
+                                            placeholder={t.foodsToAvoidPlaceholder}
+                                            disabled={appState === 'loading_recipes'}
+                                        />
+                                    </div>
+                                </div>
                                 <button className="btn" onClick={handleCook} disabled={appState === 'loading_recipes'}>
                                    {appState === 'loading_recipes' ? t.cooking : t.cook}
                                 </button>
@@ -574,7 +660,7 @@ const App = () => {
                 <h1>{t.pantryChefAI}</h1>
             </header>
             <main className="app-content">
-                {activeTab === 'recipe' && <RecipeScreen t={t} uploadedImage={uploadedImage} backgroundImageUrl={backgroundImageUrl} />}
+                {activeTab === 'recipe' && <RecipeScreen t={t} language={language} uploadedImage={uploadedImage} backgroundImageUrl={backgroundImageUrl} />}
                 {activeTab === 'profile' && <ProfileScreen language={language} setLanguage={setLanguage} t={t} />}
             </main>
             <nav className="tab-bar">
